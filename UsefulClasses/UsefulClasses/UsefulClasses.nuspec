@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd">
+    <metadata>
+        <id>UsefulClasses</id>
+        <version>0.0.0.0</version>
+        <title>Useful Classes</title>
+        <authors>M.R. Inc</authors>
+        <owners>M.R. Inc</owners>
+        <licenseUrl>https://usefulclasses.codeplex.com/license</licenseUrl>
+        <projectUrl>https://usefulclasses.codeplex.com/</projectUrl>
+        <iconUrl>http://goo.gl/SnVsJy</iconUrl>
+        <requireLicenseAcceptance>true</requireLicenseAcceptance>
+        <description>Useful Classes is a DLL that I have written to include a ton of features from one file within your project.</description>
+        <releaseNotes>Fixed reference issues with 2.0.4</releaseNotes>
+        <copyright>Copyright M.R. Inc 2015</copyright>
+        <tags>Useful Classes</tags>
+        <references>
+            <group targetFramework=".NETFramework4.0">
+                <reference file="MySql.Data.dll" />
+                <reference file="UsefulClasses.dll" />
+                <reference file="System.Web.Mvc.dll" />
+            </group>
+        </references>
+    </metadata>
+    <files>
+        <file src="MySql.Data.dll" target="lib\net40\MySql.Data.dll" />
+        <file src="System.Web.Mvc.dll" target="lib\net40\System.Web.Mvc.dll" />
+        <file src="UsefulClasses.dll" target="lib\net40\UsefulClasses.dll" />
+    </files>
+</package>
