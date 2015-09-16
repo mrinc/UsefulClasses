@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Useful Classes")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Useful Classes is a DLL that I have written to include a ton of features from one file within your project.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("M.R. Inc")]
 [assembly: AssemblyProduct("Useful Classes")]
-[assembly: AssemblyCopyright("Copyright © M.R. Inc 2013")]
+[assembly: AssemblyCopyright("Copyright © M.R. Inc %YEAR%")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,6 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 //
-[assembly: AssemblyVersion("2.0.23.0")]
-[assembly: AssemblyFileVersion("2.0.23.0")]
+[assembly: AssemblyVersion("2.1.0.0")]
+[assembly: AssemblyFileVersion("2.1.0.0")]
+[assembly: AssemblyInformationalVersion("%DEBUG%")]

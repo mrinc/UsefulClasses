@@ -1,9 +1,12 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Useful_Classes
 {
@@ -69,6 +72,31 @@ namespace Useful_Classes
                 // Remove the value from the registry so that the application doesn't start
                 rkApp.DeleteValue(title, false);
             }
+        }
+
+        public static void RestartApp()
+        {
+            ProcessStartInfo Info = new ProcessStartInfo();
+            Info.Arguments = "/C ping 127.0.0.1 -n 2 && cd \"" + System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\" && \"" + System.Reflection.Assembly.GetExecutingAssembly().Location.Split('\\')[System.Reflection.Assembly.GetExecutingAssembly().Location.Split('\\').Length - 1] + "\"";
+            Info.WindowStyle = ProcessWindowStyle.Hidden;
+            Info.CreateNoWindow = true;
+            Info.FileName = "cmd.exe";
+            Process.Start(Info);
+            Environment.Exit(0);
+        }
+
+        public static string GetMVCClientIP(HttpContextBase httpContext, string headerName = "HTTP_X_FORWARDED_FOR", string seperator = ",", int clientIpIndex = 0)
+        {
+            var request = httpContext.Request;
+            if (request == null) throw new ArgumentNullException("request");
+            var rc = request.UserHostAddress;
+            if (request.Headers.AllKeys.Contains(headerName))
+            {
+                var header = request.Headers[headerName];
+                var ha = header.Split(new[] { seperator }, StringSplitOptions.RemoveEmptyEntries);
+                rc = ha[clientIpIndex];
+            }
+            return rc;
         }
     }
 }

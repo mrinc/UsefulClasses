@@ -37,6 +37,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PublishToNuget Condition="'$(PublishToNuget)' == ''">False</PublishToNuget>
+    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+    <VCSBranchName Condition="'$(VCSBranchName)' == ''">local</VCSBranchName>
+    <BuildInfoVersion>Config=$(Configuration); On=%DATENOW%; Branch=$(VCSBranchName)</BuildInfoVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MySql.Data, Version=6.9.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
@@ -104,32 +111,73 @@
       <Using Namespace="System.Text.RegularExpressions" />
       <Code Type="Fragment" Language="cs"><![CDATA[
         Log.LogMessage("Updating version details of assembly info at: " + this.AssemblyInfoPath, MessageImportance.High);
-
-        if (File.Exists(this.AssemblyInfoPath))
-          File.WriteAllText(this.AssemblyInfoPath,
+        
+        string directPath = Environment.CurrentDirectory + "\\" + this.AssemblyInfoPath;
+        if (File.Exists(directPath)) {
+          File.WriteAllText(directPath,
             Regex.Replace(
-              File.ReadAllText(this.AssemblyInfoPath),
-              @"(?<=\[assembly: AssemblyFileVersion\(""[0-9]*.[0-9]*.)[0-9]*(?=.[0-9]*""\)\])",
-              m => (Convert.ToInt16(m.Value) + 1).ToString()
-            )
-          );
-          File.WriteAllText(this.AssemblyInfoPath,
-            Regex.Replace(
-              File.ReadAllText(this.AssemblyInfoPath),
+              File.ReadAllText(directPath),
               @"(?<=\[assembly: AssemblyVersion\(""[0-9]*.[0-9]*.)[0-9]*(?=.[0-9]*""\)\])",
-              m => (Convert.ToInt16(m.Value) + 1).ToString()
+              m => $(BuildNumber).ToString()
             )
           );
+          File.WriteAllText(directPath,
+            Regex.Replace(
+              File.ReadAllText(directPath),
+              @"(?<=\[assembly: AssemblyFileVersion\(""[0-9]*.[0-9]*.)[0-9]*(?=.[0-9]*""\)\])",
+              m => $(BuildNumber).ToString()
+            )
+          );
+          
+          string readText = File.ReadAllText(directPath).Replace("%DEBUG%", ("$(BuildInfoVersion)").Replace("%DATENOW%", DateTime.Now.ToString("dd/MM/yyyy")));          
+          readText = readText.Replace("%YEAR%", DateTime.Now.ToString("yyyy"));
+          File.WriteAllText(directPath, readText);
+        }
         ]]></Code>
     </Task>
   </UsingTask>
-  <Target Name="BeforeBuild">
+  <UsingTask TaskName="RevertBuildNumber" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <AssemblyInfoPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        Log.LogMessage("Updating version details of assembly info at: " + this.AssemblyInfoPath, MessageImportance.High);
+
+        string directPath = Environment.CurrentDirectory + "\\" + this.AssemblyInfoPath;
+        if (File.Exists(directPath)) {
+          File.WriteAllText(directPath,
+            Regex.Replace(
+              File.ReadAllText(directPath),
+              @"(?<=\[assembly: AssemblyVersion\(""[0-9]*.[0-9]*.)[0-9]*(?=.[0-9]*""\)\])",
+              m => "0"
+            )
+          );
+          File.WriteAllText(directPath,
+            Regex.Replace(
+              File.ReadAllText(directPath),
+              @"(?<=\[assembly: AssemblyFileVersion\(""[0-9]*.[0-9]*.)[0-9]*(?=.[0-9]*""\)\])",
+              m => "0"
+            )
+          );
+          
+          string readText = (File.ReadAllText(directPath)).Replace(("$(BuildInfoVersion)").Replace("%DATENOW%", DateTime.Now.ToString("dd/MM/yyyy")), "%DEBUG%");          
+          readText = readText.Replace(DateTime.Now.ToString("yyyy"), "%YEAR%");
+          File.WriteAllText(directPath, readText);
+        }
+        ]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="BeforeBuild" Condition="'$(Configuration)' == 'Release' AND '$(BuildNumber)' != ''">
     <RemoveDir Directories="$(TargetDir)" />
-    <Message Text="Updating Useful Classes build number!" Importance="High" />
+    <Message Text="Updating Useful Classes build number to $(BuildNumber)!" Importance="High" />
     <PropertyGroup>
-      <UsefulClassesAssemblyInfoPath>$(TargetDir)..\..\Properties\AssemblyInfo.cs</UsefulClassesAssemblyInfoPath>
+      <UsefulClassesAssemblyInfoPath>Properties\AssemblyInfo.cs</UsefulClassesAssemblyInfoPath>
     </PropertyGroup>
-    <UpdateBuildNumber AssemblyInfoPath="$(UsefulClassesAssemblyInfoPath)" />
+    <UpdateBuildNumber AssemblyInfoPath="$(UsefulClassesAssemblyInfoPath)" Condition="'$(PublishToNuget)' == 'True'" />
   </Target>
   <UsingTask TaskName="GetVersionParts" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -147,7 +195,9 @@
         ]]></Code>
     </Task>
   </UsingTask>
-  <Target Name="AfterBuild" Condition="'$(Configuration)' == 'Release'">
+  <Target Name="AfterBuild" Condition="'$(Configuration)' == 'Release' AND '$(BuildNumber)' != ''">
+    <Message Text="Reverting version change!" Importance="High" />
+    <RevertBuildNumber AssemblyInfoPath="$(UsefulClassesAssemblyInfoPath)" Condition="'$(PublishToNuget)' == 'True'" />
     <Message Text="Creating new Useful Classes Nuget Package!" Importance="High" />
     <PropertyGroup>
       <DistPath>$(TargetDir)dist</DistPath>
@@ -157,11 +207,13 @@
       <Output TaskParameter="AssemblyVersion" PropertyName="AssemblyVersionNumber" />
     </GetVersionParts>
     <PropertyGroup>
-      <NugetPackCmdToExecute>"$(TargetDir)..\..\..\.nuget\nuget.exe" pack "$(TargetDir)UsefulClasses.nuspec" -OutputDirectory "$(TargetDir.TrimEnd('\'))" -Version "$(AssemblyVersionNumber)"</NugetPackCmdToExecute>
+      <ExtraVersionString Condition="'$(VCSBranchName)' != '' AND '$(VCSBranchName)' != 'master'">-$(VCSBranchName)</ExtraVersionString>
+      <NugetPackageVersion>$(AssemblyVersionNumber)$(ExtraVersionString)</NugetPackageVersion>
+      <NugetPackCmdToExecute>"..\.nuget\nuget.exe" pack "$(TargetDir)UsefulClasses.nuspec" -OutputDirectory "$(TargetDir.TrimEnd('\'))" -Version "$(NugetPackageVersion)"</NugetPackCmdToExecute>
     </PropertyGroup>
-    <Message Text="'$(AssemblyVersionNumber)'" Importance="High" />
-    <Exec Command="$(NugetPackCmdToExecute)" />
+    <Message Text="'$(NugetPackageVersion)'" Importance="High" />
     <MakeDir Directories="$(DistPath)" />
+    <Exec Command="$(NugetPackCmdToExecute)" Condition="'$(PublishToNuget)' == 'True'" />
     <ItemGroup>
       <UsefulClassesNugetPackage Include="$(TargetDir)\*.nupkg" />
     </ItemGroup>

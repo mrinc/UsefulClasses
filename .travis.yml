@@ -1,0 +1,6 @@
+language: csharp
+solution: UsefulClasses\UsefulClasses.sln
+install:
+  - nuget UsefulClasses\UsefulClasses.sln
+script:
+  - xbuild /p:Configuration=Release;VCSBranchName=TRAVIS_BRANCH;BuildNumber=TRAVIS_BUILD_NUMBER;PublishToNuget=True UsefulClasses\UsefulClasses.sln
