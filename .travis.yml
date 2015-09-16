@@ -4,4 +4,4 @@ solution: ./UsefulClasses/UsefulClasses.sln
 install:
   - sudo nuget restore ./UsefulClasses/UsefulClasses.sln
 script:
-  - sudo xbuild /p:Configuration=Release;VCSBranchName=$TRAVIS_BRANCH;BuildNumber=$TRAVIS_BUILD_NUMBER;PublishToNuget=True;NORGAPIK=$NORGAPIK $TRAVIS_SOLUTION
+  - sudo xbuild ./UsefulClasses/UsefulClasses.sln /p:Configuration=Release;VCSBranchName=$TRAVIS_BRANCH;BuildNumber=$TRAVIS_BUILD_NUMBER;PublishToNuget=True;NORGAPIK=$NORGAPIK
