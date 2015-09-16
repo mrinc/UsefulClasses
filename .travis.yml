@@ -1,6 +1,7 @@
 language: csharp
+sudo: required
 solution: ./UsefulClasses/UsefulClasses.sln
 install:
-  - nuget restore ./UsefulClasses/UsefulClasses.sln
+  - sudo nuget restore ./UsefulClasses/UsefulClasses.sln
 script:
-  - xbuild /p:Configuration=Release;VCSBranchName=$TRAVIS_BRANCH;BuildNumber=$TRAVIS_BUILD_NUMBER;PublishToNuget=True;NORGAPIK=$NORGAPIK $TRAVIS_SOLUTION
+  - sudo xbuild /p:Configuration=Release;VCSBranchName=$TRAVIS_BRANCH;BuildNumber=$TRAVIS_BUILD_NUMBER;PublishToNuget=True;NORGAPIK=$NORGAPIK $TRAVIS_SOLUTION
