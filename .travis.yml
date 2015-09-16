@@ -3,4 +3,4 @@ solution: ./UsefulClasses/UsefulClasses.sln
 install:
   - nuget restore ./UsefulClasses/UsefulClasses.sln
 script:
-  - xbuild /p:Configuration=Release;VCSBranchName=TRAVIS_BRANCH;BuildNumber=TRAVIS_BUILD_NUMBER;PublishToNuget=True TRAVIS_SOLUTION
+  - xbuild /p:Configuration=Release;VCSBranchName=$TRAVIS_BRANCH;BuildNumber=$TRAVIS_BUILD_NUMBER;PublishToNuget=True;NORGAPIK=$NORGAPIK $TRAVIS_SOLUTION

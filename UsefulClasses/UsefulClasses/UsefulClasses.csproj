@@ -213,12 +213,16 @@
     </PropertyGroup>
     <Message Text="'$(NugetPackageVersion)'" Importance="High" />
     <MakeDir Directories="$(DistPath)" />
-    <Exec Command="$(NugetPackCmdToExecute)" Condition="'$(PublishToNuget)' == 'True'" />
     <ItemGroup>
       <UsefulClassesNugetPackage Include="$(TargetDir)\*.nupkg" />
     </ItemGroup>
-    <Message Text="Nuget Packages: @(UsefulClassesNugetPackage)" Importance="High" />
     <Copy SourceFiles="@(UsefulClassesNugetPackage)" DestinationFolder="$(DistPath)" />
+    <ItemGroup>
+      <UsefulClassesPackagedNugetPackage Include="$(DistPath)\*.nupkg" />
+    </ItemGroup>
+    <Message Text="Nuget Packages: @(UsefulClassesPackagedNugetPackage)" Importance="High" />
+    <Message Text="Pushing packages to nuget.org" Importance="High" Condition="'$(PublishToNuget)' == 'True' AND '$(VCSBranchName)' == 'master'" />
+    <Exec Command="'..\.nuget\nuget.exe' push '%(UsefulClassesPackagedNugetPackage.Identity)' -ApiKey '$(NORGAPIK)' -Source nuget.org" Condition="'$(PublishToNuget)' == 'True' AND '$(VCSBranchName)' == 'master'" />
   </Target>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
